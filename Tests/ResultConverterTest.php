@@ -17,7 +17,7 @@ use Symfony\AI\Platform\Bridge\DeepSeek\ResultConverter;
 use Symfony\AI\Platform\Exception\ContentFilterException;
 use Symfony\AI\Platform\Exception\ExceedContextSizeException;
 use Symfony\AI\Platform\Exception\InvalidRequestException;
-use Symfony\AI\Platform\Exception\RuntimeException;
+use Symfony\AI\Platform\Exception\ServerException;
 use Symfony\AI\Platform\Model;
 use Symfony\AI\Platform\Result\InMemoryRawResult;
 use Symfony\AI\Platform\Result\RawHttpResult;
@@ -258,14 +258,14 @@ final class ResultConverterTest extends TestCase
         $this->assertSame('world!', $chunks[1]->getText());
     }
 
-    public function testThrowsOnUnhandledHttpErrorStatusBeforeStreaming()
+    public function testThrowsServerExceptionOnServerErrorStatusBeforeStreaming()
     {
         $httpClient = new MockHttpClient(new JsonMockResponse(['error' => 'Service Unavailable'], ['http_code' => 500]));
         $httpResponse = $httpClient->request('POST', 'https://example.com');
         $converter = new ResultConverter();
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unexpected response code 500');
+        $this->expectException(ServerException::class);
+        $this->expectExceptionMessage('Server error (HTTP 500');
 
         $converter->convert(new RawHttpResult($httpResponse), ['stream' => true]);
     }
