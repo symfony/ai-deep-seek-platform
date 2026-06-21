@@ -62,6 +62,21 @@ final class ModelClientTest extends TestCase
         $this->assertTrue($requestMade);
     }
 
+    public function testCustomBaseUrlIsUsedAndTrailingSlashNormalized()
+    {
+        $requestMade = false;
+        $httpClient = new MockHttpClient(static function ($method, $url) use (&$requestMade) {
+            $requestMade = true;
+            self::assertSame('https://deepseek.example.com/chat/completions', $url);
+
+            return new JsonMockResponse(['choices' => [['message' => ['content' => 'Hello'], 'finish_reason' => 'stop']]]);
+        });
+
+        $modelClient = new ModelClient($httpClient, 'test-api-key', 'https://deepseek.example.com/');
+        $modelClient->request(new DeepSeek('deepseek-chat'), ['messages' => [['role' => 'user', 'content' => 'Hi']]]);
+        $this->assertTrue($requestMade);
+    }
+
     public function testRequestMergesOptionsWithPayload()
     {
         $requestMade = false;

@@ -34,12 +34,13 @@ final class Factory
         ?Contract $contract = null,
         ?EventDispatcherInterface $eventDispatcher = null,
         string $name = 'deepseek',
+        string $baseUrl = 'https://api.deepseek.com',
     ): ProviderInterface {
         $httpClient = $httpClient instanceof EventSourceHttpClient ? $httpClient : new EventSourceHttpClient($httpClient);
 
         return new Provider(
             $name,
-            [new ModelClient($httpClient, $apiKey)],
+            [new ModelClient($httpClient, $apiKey, $baseUrl)],
             [new ResultConverter()],
             $modelCatalog,
             $contract ?? Contract::create(),
@@ -58,9 +59,10 @@ final class Factory
         ?EventDispatcherInterface $eventDispatcher = null,
         string $name = 'deepseek',
         ?ModelRouterInterface $modelRouter = null,
+        string $baseUrl = 'https://api.deepseek.com',
     ): Platform {
         return new Platform(
-            [self::createProvider($apiKey, $httpClient, $modelCatalog, $contract, $eventDispatcher, $name)],
+            [self::createProvider($apiKey, $httpClient, $modelCatalog, $contract, $eventDispatcher, $name, $baseUrl)],
             $modelRouter ?? new CatalogBasedModelRouter(),
             $eventDispatcher,
         );

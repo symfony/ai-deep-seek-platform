@@ -27,12 +27,18 @@ final class ModelClient implements ModelClientInterface
     use JsonBodyEncodingTrait;
 
     private readonly EventSourceHttpClient $httpClient;
+    private readonly string $baseUrl;
 
+    /**
+     * @param string $baseUrl Base URL of a DeepSeek-compatible endpoint, with or without a trailing slash
+     */
     public function __construct(
         HttpClientInterface $httpClient,
         #[\SensitiveParameter] private readonly string $apiKey,
+        string $baseUrl = 'https://api.deepseek.com',
     ) {
         $this->httpClient = $httpClient instanceof EventSourceHttpClient ? $httpClient : new EventSourceHttpClient($httpClient);
+        $this->baseUrl = rtrim($baseUrl, '/');
     }
 
     public function supports(Model $model): bool
@@ -46,7 +52,7 @@ final class ModelClient implements ModelClientInterface
             throw new InvalidArgumentException(\sprintf('Payload must be an array, but a string was given to "%s".', self::class));
         }
 
-        return new RawHttpResult($this->httpClient->request('POST', 'https://api.deepseek.com/chat/completions', [
+        return new RawHttpResult($this->httpClient->request('POST', $this->baseUrl.'/chat/completions', [
             'auth_bearer' => $this->apiKey,
             'headers' => ['Content-Type' => 'application/json'],
             'body' => $this->encodeJsonBody(array_merge($options, $payload)),
